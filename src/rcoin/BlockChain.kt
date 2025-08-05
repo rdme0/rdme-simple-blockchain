@@ -1,14 +1,19 @@
+package rcoin
+
 class BlockChain {
+    var UTXO = mutableMapOf<String, TransactionOutput>()
+
     companion object {
-        private const val DIFFICULTY = 5
+        private const val DIFFICULTY = 4
         private val VALID_PREFIX = "a".repeat(DIFFICULTY)
     }
 
-    private var blocks: MutableList<Block> = mutableListOf()
+    var blocks: MutableList<Block> = mutableListOf()
 
     fun add(block: Block): Block {
         val minedBlock = if (isMined(block)) block else mine(block)
         blocks.add(minedBlock)
+        updateUTXO(minedBlock)
         return minedBlock
     }
 
@@ -49,6 +54,11 @@ class BlockChain {
                 return true
             }
         }
+    }
+
+    private fun updateUTXO(block: Block) {
+        block.transactions.flatMap { it.inputs }.map { it.hash }.forEach { UTXO.remove(it) }
+        UTXO.putAll(block.transactions.flatMap { it.outputs }.associateBy { it.hash })
     }
 
 }
